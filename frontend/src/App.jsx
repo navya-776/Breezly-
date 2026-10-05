@@ -21,6 +21,33 @@ export default function App() {
   // ONE Centralized Selected Forecast Hour State (0 to 71)
   const [selectedHour, setSelectedHour] = useState(0);
 
+  // Theme Management (Dark Mode / Light Mode with localStorage and system preference)
+  const [theme, setTheme] = useState(() => {
+    try {
+      const saved = localStorage.getItem('breezly-theme');
+      if (saved === 'light' || saved === 'dark') return saved;
+      if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+        return 'light';
+      }
+    } catch (e) {
+      // fallback
+    }
+    return 'dark';
+  });
+
+  useEffect(() => {
+    try {
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('breezly-theme', theme);
+    } catch (e) {
+      // fallback
+    }
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  };
+
   // Fetch forecast and plume data from backend
   const fetchData = async (forceRefresh = false) => {
     setLoading(true);
@@ -78,6 +105,8 @@ export default function App() {
         loading={loading}
         currentForecast={currentForecast}
         selectedHour={selectedHour}
+        theme={theme}
+        onToggleTheme={toggleTheme}
       />
 
       {/* Backend connection notice if any */}
@@ -134,7 +163,9 @@ export default function App() {
         selectedHour={selectedHour}
         onSelectHour={(hr) => setSelectedHour(hr)}
         stationName={activeStation?.station_name || activeStation?.name}
+        theme={theme}
       />
+
 
       {/* 8. SIMPLE FORECAST SUMMARY */}
       <ForecastSummaryCards

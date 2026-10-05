@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Wind, RefreshCw, MapPin, Clock } from 'lucide-react';
+import { Wind, RefreshCw, MapPin, Clock, Sun, Moon } from 'lucide-react';
 import { formatLiveCurrentTime, formatForecastDate } from '../utils/formatters';
 
 export default function Header({
@@ -9,7 +9,9 @@ export default function Header({
   onRefresh,
   loading,
   currentForecast,
-  selectedHour = 0
+  selectedHour = 0,
+  theme = 'dark',
+  onToggleTheme
 }) {
   const [liveTimeStr, setLiveTimeStr] = useState(formatLiveCurrentTime());
 
@@ -70,6 +72,22 @@ export default function Header({
           </span>
         </div>
 
+        {/* Theme Toggle Button */}
+        {onToggleTheme && (
+          <button
+            onClick={onToggleTheme}
+            className="theme-toggle-btn"
+            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            aria-label={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          >
+            {theme === 'dark' ? (
+              <Sun className="w-4 h-4 text-amber-300" />
+            ) : (
+              <Moon className="w-4 h-4 text-indigo-600" />
+            )}
+          </button>
+        )}
+
         {/* Refresh Button */}
         <button
           onClick={onRefresh}
@@ -84,4 +102,5 @@ export default function Header({
     </header>
   );
 }
+
 

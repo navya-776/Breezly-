@@ -15,9 +15,14 @@ export default function ForecastOutlookChart({
   forecastRecords = [],
   selectedHour = 0,
   onSelectHour,
-  stationName = 'Delhi NCR'
+  stationName = 'Delhi NCR',
+  theme = 'dark'
 }) {
   const [metricMode, setMetricMode] = useState('aqi'); // 'aqi' or 'pm25'
+
+  const axisStroke = theme === 'light' ? '#94a3b8' : '#64748b';
+  const axisText = theme === 'light' ? '#475569' : '#94a3b8';
+  const markerColor = theme === 'light' ? '#4f46e5' : '#ffffff';
 
   // Prepare chart dataset
   const chartData = forecastRecords.map((rec, index) => {
@@ -106,16 +111,16 @@ export default function ForecastOutlookChart({
                 const rec = chartData[hr];
                 return hr === 0 ? 'NOW' : `+${hr}h`;
               }}
-              stroke="#64748b"
-              tick={{ fontSize: 11, fill: '#94a3b8' }}
+              stroke={axisStroke}
+              tick={{ fontSize: 11, fill: axisText }}
               tickLine={false}
               interval={11}
             />
 
             <YAxis
               domain={metricMode === 'aqi' ? [0, 500] : [0, 'auto']}
-              stroke="#64748b"
-              tick={{ fontSize: 11, fill: '#94a3b8' }}
+              stroke={axisStroke}
+              tick={{ fontSize: 11, fill: axisText }}
               tickLine={false}
             />
 
@@ -133,11 +138,11 @@ export default function ForecastOutlookChart({
                       <span>AQI:</span>
                       <strong>{d.aqi} ({meta.category})</strong>
                     </div>
-                    <div className="tooltip-row text-rose-300">
+                    <div className="tooltip-row" style={{ color: '#ef4444' }}>
                       <span>PM2.5:</span>
                       <strong>{d.pm25} µg/m³</strong>
                     </div>
-                    <div className="tooltip-row text-slate-300">
+                    <div className="tooltip-row" style={{ color: axisText }}>
                       <span>Wind:</span>
                       <span>{d.windSpeed} m/s</span>
                     </div>
@@ -152,13 +157,13 @@ export default function ForecastOutlookChart({
             {/* Vertical Marker for Selected Hour */}
             <ReferenceLine
               x={selectedHour}
-              stroke="#ffffff"
+              stroke={markerColor}
               strokeDasharray="3 3"
               strokeWidth={2}
               label={{
                 value: selectedHour === 0 ? 'NOW' : `+${selectedHour}h`,
                 position: 'top',
-                fill: '#ffffff',
+                fill: markerColor,
                 fontSize: 11,
                 fontWeight: 700
               }}
@@ -172,6 +177,7 @@ export default function ForecastOutlookChart({
                 <ReferenceLine y={400} stroke="#ef4444" strokeDasharray="2 2" strokeOpacity={0.4} />
               </>
             )}
+
 
             <Area
               type="monotone"
