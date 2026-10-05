@@ -1,6 +1,44 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Wind, RefreshCw, MapPin, Clock } from 'lucide-react';
 import { formatForecastDate } from '../utils/formatters';
+
+function formatCurrentLiveTime() {
+  const d = new Date();
+  try {
+    const day = d.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short'
+    });
+    const time = d.toLocaleTimeString('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+    
+    let tzLabel = 'IST';
+    try {
+      const resolvedTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (resolvedTz === 'Asia/Kolkata' || resolvedTz === 'Asia/Calcutta' || d.getTimezoneOffset() === -330) {
+        tzLabel = 'IST';
+      } else {
+        const part = new Intl.DateTimeFormat('en-US', { timeZoneName: 'short' })
+          .formatToParts(d)
+          .find((p) => p.type === 'timeZoneName')?.value;
+        tzLabel = part || 'IST';
+      }
+    } catch {
+      tzLabel = 'IST';
+    }
+
+    return `${day} • ${time} ${tzLabel}`;
+  } catch (e) {
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = d.toLocaleString('en-GB', { month: 'short' });
+    const hours = String(d.getHours()).padStart(2, '0');
+    const mins = String(d.getMinutes()).padStart(2, '0');
+    return `${day} ${month} • ${hours}:${mins} IST`;
+  }
+}
 
 export default function Header({
   stations = [],
@@ -11,7 +49,22 @@ export default function Header({
   currentForecast,
   selectedHour = 0
 }) {
-  const timestampStr = formatForecastDate(currentForecast?.timestamp, selectedHour);
+  const [liveTimeStr, setLiveTimeStr] = useState(formatCurrentLiveTime());
+
+  // Update live clock every 60 seconds without full page refresh
+  useEffect(() => {
+    setLiveTimeStr(formatCurrentLiveTime());
+    const intervalId = setInterval(() => {
+      setLiveTimeStr(formatCurrentLiveTime());
+    }, 60000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
+  const displayTimestamp = selectedHour === 0
+    ? liveTimeStr
+    : formatForecastDate(currentForecast?.timestamp, selectedHour);
+
 
   return (
     <header className="breezly-header">
