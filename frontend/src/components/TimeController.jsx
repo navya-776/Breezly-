@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Play, Pause, Sun, Moon, RotateCcw } from 'lucide-react';
-import { formatForecastDate } from '../utils/formatters';
+import { formatLiveCurrentTime, formatForecastDate } from '../utils/formatters';
 
 const QUICK_INTERVALS = [
   { label: 'NOW', hour: 0 },
@@ -18,6 +18,17 @@ export default function TimeController({
   currentForecast
 }) {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [liveTimeStr, setLiveTimeStr] = useState(formatLiveCurrentTime());
+
+  // Update live clock every 60 seconds for hour 0 (NOW)
+  useEffect(() => {
+    setLiveTimeStr(formatLiveCurrentTime());
+    const intervalId = setInterval(() => {
+      setLiveTimeStr(formatLiveCurrentTime());
+    }, 60000);
+
+    return () => clearInterval(intervalId);
+  }, []);
 
   // Auto-play animation
   useEffect(() => {
@@ -38,7 +49,9 @@ export default function TimeController({
     };
   }, [isPlaying, maxHours, onHourChange]);
 
-  const dateStr = formatForecastDate(currentForecast?.timestamp, selectedHour);
+  const dateStr = selectedHour === 0
+    ? liveTimeStr
+    : formatForecastDate(currentForecast?.timestamp, selectedHour);
   const isDaytime = (currentForecast?.meteorology?.solar_radiation ?? 0) > 10;
 
   return (

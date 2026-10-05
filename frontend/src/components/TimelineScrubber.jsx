@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Play, Pause, RotateCcw, Clock } from 'lucide-react';
-import { formatForecastDate } from '../utils/formatters';
+import { formatLiveCurrentTime, formatForecastDate } from '../utils/formatters';
 
 export default function TimelineScrubber({
   currentHour = 0,
@@ -9,6 +9,15 @@ export default function TimelineScrubber({
   currentRecord
 }) {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [liveTimeStr, setLiveTimeStr] = useState(formatLiveCurrentTime());
+
+  useEffect(() => {
+    setLiveTimeStr(formatLiveCurrentTime());
+    const intervalId = setInterval(() => {
+      setLiveTimeStr(formatLiveCurrentTime());
+    }, 60000);
+    return () => clearInterval(intervalId);
+  }, []);
 
   // Playback timer
   useEffect(() => {
@@ -23,7 +32,9 @@ export default function TimelineScrubber({
     };
   }, [isPlaying, maxHours, onHourChange]);
 
-  const timestampString = formatForecastDate(currentRecord?.timestamp, currentHour);
+  const timestampString = currentHour === 0
+    ? liveTimeStr
+    : formatForecastDate(currentRecord?.timestamp, currentHour);
 
   return (
     <div className="timeline-card">
