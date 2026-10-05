@@ -26,13 +26,31 @@ PUNJAB_HARYANA_FIRE_BBOX = {
 import os
 import json
 
-_METADATA_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data", "metadata", "cpcb_delhi_stations.json"))
+def _get_metadata_path() -> str:
+    """Finds cpcb_delhi_stations.json across Vercel and local folder hierarchies."""
+    cur_dir = os.path.dirname(os.path.abspath(__file__))
+    candidates = [
+        os.path.join(cur_dir, "data", "metadata", "cpcb_delhi_stations.json"),
+        os.path.join(cur_dir, "..", "data", "metadata", "cpcb_delhi_stations.json"),
+        os.path.join(cur_dir, "..", "..", "data", "metadata", "cpcb_delhi_stations.json"),
+        os.path.join(os.getcwd(), "backend", "data", "metadata", "cpcb_delhi_stations.json"),
+        os.path.join(os.getcwd(), "data", "metadata", "cpcb_delhi_stations.json"),
+        "/var/task/data/metadata/cpcb_delhi_stations.json",
+        "/var/task/backend/data/metadata/cpcb_delhi_stations.json"
+    ]
+    for c in candidates:
+        if os.path.exists(c):
+            return os.path.abspath(c)
+    return os.path.abspath(os.path.join(cur_dir, "data", "metadata", "cpcb_delhi_stations.json"))
+
+_METADATA_PATH = _get_metadata_path()
 
 def _init_stations() -> List[Dict[str, Any]]:
     stations_list = []
-    if os.path.exists(_METADATA_PATH):
+    metadata_file = _get_metadata_path()
+    if os.path.exists(metadata_file):
         try:
-            with open(_METADATA_PATH, "r", encoding="utf-8") as f:
+            with open(metadata_file, "r", encoding="utf-8") as f:
                 raw_data = json.load(f).get("data", [])
                 for s in raw_data:
                     st_id = s.get("station_id")
@@ -58,7 +76,8 @@ def _init_stations() -> List[Dict[str, Any]]:
                         "local_traffic_factor": traffic_factor,
                         "source": "cpcb_caaqm"
                     })
-                return stations_list
+                if stations_list:
+                    return stations_list
         except Exception:
             pass
     return [
@@ -67,6 +86,7 @@ def _init_stations() -> List[Dict[str, Any]]:
     ]
 
 STATIONS: List[Dict[str, Any]] = _init_stations()
+
 
 
 # Physical Calibration Parameters (Derived from atmospheric boundary layer & smog box models in the Indo-Gangetic Plain)

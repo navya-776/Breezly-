@@ -18,22 +18,45 @@ import urllib.request
 import datetime
 from typing import Dict, List, Any, Optional, Tuple
 
-# Path definitions
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-DATA_DIR = os.path.join(BASE_DIR, "data")
-METADATA_DIR = os.path.join(DATA_DIR, "metadata")
-HISTORICAL_DIR = os.path.join(DATA_DIR, "historical")
+# Dynamic Path Resolution supporting Vercel Serverless Services & Local Development
+def get_data_dir() -> str:
+    """Finds data folder across Vercel Lambda (/var/task/data), backend/data, and repo root."""
+    cur_dir = os.path.dirname(os.path.abspath(__file__))  # backend/services
+    candidates = [
+        os.path.join(cur_dir, "..", "data"),        # backend/data
+        os.path.join(cur_dir, "..", "..", "data"),  # repo_root/data
+        os.path.join(cur_dir, "data"),              # backend/services/data
+        os.path.join(os.getcwd(), "backend", "data"),
+        os.path.join(os.getcwd(), "data"),
+        "/var/task/data",
+        "/var/task/backend/data"
+    ]
+    for c in candidates:
+        norm = os.path.abspath(c)
+        if os.path.isdir(norm) and (
+            os.path.exists(os.path.join(norm, "metadata", "cpcb_delhi_stations.json"))
+            or os.path.exists(os.path.join(norm, "historical"))
+        ):
+            return norm
+    return os.path.abspath(os.path.join(cur_dir, "..", "data"))
 
-STATIONS_METADATA_FILE = os.path.join(METADATA_DIR, "cpcb_delhi_stations.json")
-HISTORICAL_WEATHER_CSV = os.path.join(HISTORICAL_DIR, "delhi_weather_hourly_nov2024.csv")
-MERGED_DATASET_CSV = os.path.join(HISTORICAL_DIR, "delhi_aqi_weather_hourly_nov2024.csv")
+def get_stations_metadata_file() -> str:
+    return os.path.join(get_data_dir(), "metadata", "cpcb_delhi_stations.json")
 
-POLLUTION_FILES = {
-    "pm25": os.path.join(HISTORICAL_DIR, "cpcb_pm25_hourly_nov2024.csv"),
-    "pm10": os.path.join(HISTORICAL_DIR, "cpcb_pm10_hourly_nov2024.csv"),
-    "no2": os.path.join(HISTORICAL_DIR, "cpcb_no2_hourly_nov2024.csv"),
-    "o3": os.path.join(HISTORICAL_DIR, "cpcb_o3_hourly_nov2024.csv")
-}
+def get_historical_weather_csv() -> str:
+    return os.path.join(get_data_dir(), "historical", "delhi_weather_hourly_nov2024.csv")
+
+def get_merged_dataset_csv() -> str:
+    return os.path.join(get_data_dir(), "historical", "delhi_aqi_weather_hourly_nov2024.csv")
+
+def get_pollution_files() -> Dict[str, str]:
+    h_dir = os.path.join(get_data_dir(), "historical")
+    return {
+        "pm25": os.path.join(h_dir, "cpcb_pm25_hourly_nov2024.csv"),
+        "pm10": os.path.join(h_dir, "cpcb_pm10_hourly_nov2024.csv"),
+        "no2": os.path.join(h_dir, "cpcb_no2_hourly_nov2024.csv"),
+        "o3": os.path.join(h_dir, "cpcb_o3_hourly_nov2024.csv")
+    }
 
 # Provenance constants
 WEATHER_SOURCE = "Open-Meteo Historical Weather API"
@@ -50,28 +73,26 @@ _DATA_STATUS_CACHE: Optional[Dict[str, Any]] = None
 
 
 def load_stations_metadata() -> List[Dict[str, Any]]:
-    """Loads the 39 Delhi CPCB station metadata from disk or downloads."""
+    """Loads the 39 Delhi CPCB station metadata from disk."""
     global _STATIONS_CACHE
     if _STATIONS_CACHE:
         return _STATIONS_CACHE
 
-    target_file = STATIONS_METADATA_FILE
-    if not os.path.exists(target_file):
-        # Fallback to Downloads if file not yet copied
-        downloads_fallback = os.path.expanduser(r"~\Downloads\response_1791219333895.json")
-        if os.path.exists(downloads_fallback):
-            target_file = downloads_fallback
-        else:
-            raise FileNotFoundError(f"CPCB stations metadata file not found at {STATIONS_METADATA_FILE}")
+    target_file = get_stations_metadata_file()
+    if os.path.exists(target_file):
+        with open(target_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            stations = data.get("data", [])
+            if not stations and isinstance(data, list):
+                stations = data
+            if stations:
+                _STATIONS_CACHE = stations
+                return _STATIONS_CACHE
 
-    with open(target_file, "r", encoding="utf-8") as f:
-        data = json.load(f)
-        stations = data.get("data", [])
-        if not stations and isinstance(data, list):
-            stations = data
-
-    _STATIONS_CACHE = stations
+    from config import STATIONS
+    _STATIONS_CACHE = STATIONS
     return _STATIONS_CACHE
+
 
 
 def fetch_open_meteo_historical_batch(
@@ -123,7 +144,7 @@ def fetch_open_meteo_historical_batch(
 def build_and_save_weather_csv(
     stations: List[Dict[str, Any]],
     api_results: List[Dict[str, Any]],
-    output_path: str = HISTORICAL_WEATHER_CSV
+    output_path: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Parses Open-Meteo multi-location response and saves to CSV with exact schema:
@@ -131,7 +152,10 @@ def build_and_save_weather_csv(
     temperature_2m, relative_humidity_2m, precipitation, surface_pressure,
     wind_speed_10m, wind_direction_10m, shortwave_radiation, boundary_layer_height.
     """
+    if output_path is None:
+        output_path = get_historical_weather_csv()
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
     
     rows = []
     missing_counts = {
@@ -240,29 +264,10 @@ def load_cpcb_pollution_records() -> Dict[Tuple[str, str], Dict[str, Optional[fl
     """
     pollution_map: Dict[Tuple[str, str], Dict[str, Optional[float]]] = {}
     
-    param_keys = {
-        "pm25": ("cpcb_pm25_hourly_nov2024.csv", "PM2.5"),
-        "pm10": ("cpcb_pm10_hourly_nov2024.csv", "PM10"),
-        "no2": ("cpcb_no2_hourly_nov2024.csv", "NO2"),
-        "o3": ("cpcb_o3_hourly_nov2024.csv", "Ozone")
-    }
+    pollution_files = get_pollution_files()
     
-    downloads_dir = os.path.expanduser(r"~\Downloads")
-    
-    for pollutant, (default_fn, _) in param_keys.items():
-        fp = os.path.join(HISTORICAL_DIR, default_fn)
+    for pollutant, fp in pollution_files.items():
         if not os.path.exists(fp):
-            # Fallback to Downloads
-            alt_map = {
-                "pm25": "measurements_2024-11-01_2024-11-30_hourly.csv",
-                "pm10": "measurements_2024-11-01_2024-11-30_hourly (1).csv",
-                "no2": "measurements_2024-11-01_2024-11-30_hourly (2).csv",
-                "o3": "measurements_2024-11-01_2024-11-30_hourly (3).csv"
-            }
-            fp = os.path.join(downloads_dir, alt_map[pollutant])
-            
-        if not os.path.exists(fp):
-            print(f"Warning: Pollution file {fp} not found.")
             continue
             
         with open(fp, "r", encoding="utf-8", errors="ignore") as f:
@@ -299,13 +304,18 @@ def load_cpcb_pollution_records() -> Dict[Tuple[str, str], Dict[str, Optional[fl
 
 
 def build_merged_dataset(
-    weather_csv_path: str = HISTORICAL_WEATHER_CSV,
-    output_path: str = MERGED_DATASET_CSV
+    weather_csv_path: Optional[str] = None,
+    output_path: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Merges historical weather dataset with CPCB multi-pollutant measurements
     using (station_id + timestamp).
     """
+    if weather_csv_path is None:
+        weather_csv_path = get_historical_weather_csv()
+    if output_path is None:
+        output_path = get_merged_dataset_csv()
+        
     if not os.path.exists(weather_csv_path):
         raise FileNotFoundError(f"Historical weather file {weather_csv_path} not found.")
         
@@ -399,30 +409,41 @@ def ensure_historical_data_ready(force_download: bool = False) -> Dict[str, Any]
     global _DATA_STATUS_CACHE
     stations = load_stations_metadata()
     
-    weather_exists = os.path.exists(HISTORICAL_WEATHER_CSV)
-    merged_exists = os.path.exists(MERGED_DATASET_CSV)
+    weather_csv = get_historical_weather_csv()
+    merged_csv = get_merged_dataset_csv()
+    pollution_files = get_pollution_files()
+    
+    weather_exists = os.path.exists(weather_csv)
+    merged_exists = os.path.exists(merged_csv)
     
     if force_download or not weather_exists:
-        print("[HistoricalWeather] Fetching Open-Meteo archive for 39 stations...")
-        api_results = fetch_open_meteo_historical_batch(stations)
-        weather_stats = build_and_save_weather_csv(stations, api_results, HISTORICAL_WEATHER_CSV)
-        print(f"[HistoricalWeather] Saved {weather_stats['total_rows']} weather rows to {HISTORICAL_WEATHER_CSV}")
+        try:
+            print("[HistoricalWeather] Fetching Open-Meteo archive for 39 stations...")
+            api_results = fetch_open_meteo_historical_batch(stations)
+            weather_stats = build_and_save_weather_csv(stations, api_results, weather_csv)
+            print(f"[HistoricalWeather] Saved {weather_stats['total_rows']} weather rows to {weather_csv}")
+        except Exception as e:
+            print(f"[HistoricalWeather] Weather fetch skipped/failed: {e}")
         
-    if force_download or not merged_exists or not weather_exists:
-        print("[HistoricalWeather] Merging weather with CPCB pollution datasets...")
-        merge_stats = build_merged_dataset(HISTORICAL_WEATHER_CSV, MERGED_DATASET_CSV)
-        print(f"[HistoricalWeather] Saved merged dataset: {merge_stats['total_merged_rows']} rows.")
+    if force_download or not merged_exists:
+        if os.path.exists(weather_csv):
+            try:
+                print("[HistoricalWeather] Merging weather with CPCB pollution datasets...")
+                merge_stats = build_merged_dataset(weather_csv, merged_csv)
+                print(f"[HistoricalWeather] Saved merged dataset: {merge_stats['total_merged_rows']} rows.")
+            except Exception as e:
+                print(f"[HistoricalWeather] Merge skipped/failed: {e}")
         
     # Read row counts for data status
     total_weather_rows = 0
-    if os.path.exists(HISTORICAL_WEATHER_CSV):
-        with open(HISTORICAL_WEATHER_CSV, "r", encoding="utf-8") as f:
-            total_weather_rows = sum(1 for _ in f) - 1
+    if os.path.exists(weather_csv):
+        with open(weather_csv, "r", encoding="utf-8") as f:
+            total_weather_rows = max(0, sum(1 for _ in f) - 1)
             
     total_merged_rows = 0
-    if os.path.exists(MERGED_DATASET_CSV):
-        with open(MERGED_DATASET_CSV, "r", encoding="utf-8") as f:
-            total_merged_rows = sum(1 for _ in f) - 1
+    if os.path.exists(merged_csv):
+        with open(merged_csv, "r", encoding="utf-8") as f:
+            total_merged_rows = max(0, sum(1 for _ in f) - 1)
 
     status = {
         "status": "ready",
@@ -430,10 +451,10 @@ def ensure_historical_data_ready(force_download: bool = False) -> Dict[str, Any]
         "weather_record_count": total_weather_rows,
         "merged_record_count": total_merged_rows,
         "pollution_record_availability": {
-            "pm25": os.path.exists(POLLUTION_FILES["pm25"]),
-            "pm10": os.path.exists(POLLUTION_FILES["pm10"]),
-            "no2": os.path.exists(POLLUTION_FILES["no2"]),
-            "o3": os.path.exists(POLLUTION_FILES["o3"])
+            "pm25": os.path.exists(pollution_files["pm25"]),
+            "pm10": os.path.exists(pollution_files["pm10"]),
+            "no2": os.path.exists(pollution_files["no2"]),
+            "o3": os.path.exists(pollution_files["o3"])
         },
         "weather_source": WEATHER_SOURCE,
         "pollution_source": POLLUTION_SOURCE,
@@ -463,10 +484,11 @@ def get_station_historical_baseline(station_id: str) -> Optional[Dict[str, Any]]
         return None
         
     st_id = st_meta.get("station_id") or st_meta.get("id")
+    merged_csv = get_merged_dataset_csv()
     
-    if os.path.exists(MERGED_DATASET_CSV):
+    if os.path.exists(merged_csv):
         records = []
-        with open(MERGED_DATASET_CSV, "r", encoding="utf-8") as f:
+        with open(merged_csv, "r", encoding="utf-8") as f:
             reader = csv.DictReader(f)
             for r in reader:
                 if r["station_id"] == st_id:
@@ -501,3 +523,4 @@ def get_station_historical_baseline(station_id: str) -> Optional[Dict[str, Any]]
             }
             
     return None
+
