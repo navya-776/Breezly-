@@ -91,12 +91,12 @@ export default function ForecastOutlookChart({
       </div>
 
       {/* Chart Canvas */}
-      <div className="chart-canvas-wrapper" style={{ width: '100%', height: 260 }}>
-        <ResponsiveContainer width="100%" height="100%">
+      <div className="chart-canvas-wrapper" style={{ width: '100%', minWidth: 0, height: 260 }}>
+        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
           <AreaChart
             data={chartData}
             onClick={handleChartClick}
-            margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+            margin={{ top: 10, right: 10, left: -25, bottom: 0 }}
           >
             <defs>
               <linearGradient id="aqiAreaGrad" x1="0" y1="0" x2="0" y2="1">

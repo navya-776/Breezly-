@@ -1448,20 +1448,29 @@ h1, h2, h3, h4, .font-display {
 }
 
 /* ==========================================================================
-   RESPONSIVE LAYOUT
+   RESPONSIVE LAYOUT & MOBILE ADAPTATION (375px, 390px, 640px, 768px, 1024px)
    ========================================================================== */
+
+/* Tablet and intermediate screens */
+@media (max-width: 1024px) {
+  .breezly-dashboard {
+    max-width: 960px;
+    padding: 1rem 0.875rem 3rem 0.875rem;
+  }
+}
+
 @media (max-width: 768px) {
   .breezly-dashboard {
-    padding: 0.75rem 0.5rem;
+    padding: 0.75rem 0.625rem 2.5rem 0.625rem;
     gap: 0.875rem;
   }
   
   .hero-aqi-number {
-    font-size: 3.5rem;
+    font-size: 3.75rem;
   }
 
   .map-container-wrap {
-    height: 300px;
+    height: 320px;
   }
 
   .quick-jump-group {
@@ -1469,3 +1478,481 @@ h1, h2, h3, h4, .font-display {
     justify-content: space-between;
   }
 }
+
+/* Standard Mobile Screens (≤ 640px) */
+@media (max-width: 640px) {
+  html, body {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  .breezly-dashboard {
+    width: 100%;
+    max-width: 100vw;
+    padding: 0.625rem 0.5rem 2rem 0.5rem;
+    gap: 0.75rem;
+    box-sizing: border-box;
+  }
+
+  /* 1. Header */
+  .breezly-header {
+    padding: 0.75rem 0.75rem;
+    gap: 0.625rem;
+  }
+
+  .brand-icon {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+
+  .brand-title {
+    font-size: 1.2rem;
+  }
+
+  .brand-subtitle {
+    font-size: 0.75rem;
+  }
+
+  .header-actions {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    justify-content: space-between;
+  }
+
+  .station-selector-wrapper {
+    width: 100%;
+    flex: 1 1 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 0.35rem 0.6rem;
+  }
+
+  .station-select {
+    width: 100%;
+    max-width: calc(100% - 1.5rem);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    font-size: 0.75rem;
+  }
+
+  .timestamp-pill {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 0.35rem 0.5rem;
+    font-size: 0.7rem;
+  }
+
+  .timestamp-text {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .theme-toggle-btn {
+    width: 2rem;
+    height: 2rem;
+    flex-shrink: 0;
+  }
+
+  .refresh-btn {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.7rem;
+    flex-shrink: 0;
+  }
+
+  /* 2. Time Controller */
+  .time-controller-card {
+    padding: 0.75rem 0.75rem;
+    gap: 0.625rem;
+  }
+
+  .time-controller-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .quick-jump-group {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0.25rem;
+  }
+
+  .quick-time-btn {
+    width: 100%;
+    padding: 0.35rem 0.15rem;
+    font-size: 0.6875rem;
+    text-align: center;
+  }
+
+  .time-display-group {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.35rem;
+  }
+
+  .time-indicator-pill {
+    flex: 1;
+    min-width: 0;
+    padding: 0.3rem 0.45rem;
+    font-size: 0.6875rem;
+    overflow: hidden;
+  }
+
+  .time-indicator-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .play-btn {
+    flex-shrink: 0;
+    padding: 0.3rem 0.55rem;
+    font-size: 0.6875rem;
+  }
+
+  .reset-time-btn {
+    flex-shrink: 0;
+    width: 1.85rem;
+    height: 1.85rem;
+  }
+
+  .timeline-ticks {
+    font-size: 0.6rem;
+  }
+
+  /* 3. Hero AQI Card */
+  .hero-aqi-card {
+    padding: 0.875rem 0.75rem;
+    gap: 0.875rem;
+  }
+
+  .hero-top-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .hero-station-title {
+    font-size: 1.2rem;
+    line-height: 1.3;
+    word-break: break-word;
+  }
+
+  .hero-category-pill {
+    align-self: flex-start;
+    font-size: 0.725rem;
+    padding: 0.25rem 0.65rem;
+  }
+
+  .hero-aqi-number {
+    font-size: 3.25rem;
+  }
+
+  .hero-aqi-label span:first-child {
+    font-size: 0.95rem;
+  }
+
+  .hero-submetrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.45rem;
+  }
+
+  .hero-submetric-item {
+    padding: 0.6rem 0.65rem;
+  }
+
+  .submetric-title {
+    font-size: 0.7rem;
+  }
+
+  .submetric-val {
+    font-size: 1.15rem;
+  }
+
+  .submetric-trend {
+    font-size: 0.65rem;
+  }
+
+  .hero-advisory-bar {
+    padding: 0.55rem 0.65rem;
+    font-size: 0.725rem;
+  }
+
+  /* 4. Spatial Map */
+  .spatial-map-card {
+    padding: 0.75rem;
+    gap: 0.625rem;
+  }
+
+  .map-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+  }
+
+  .map-legend {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 0.3rem 0.5rem;
+    font-size: 0.65rem;
+  }
+
+  .map-container-wrap {
+    height: 280px;
+  }
+
+  .map-floating-overlay {
+    top: 8px;
+    right: 8px;
+    max-width: 175px;
+    gap: 0.35rem;
+  }
+
+  .map-info-item {
+    padding: 0.3rem 0.45rem;
+  }
+
+  .map-info-label {
+    font-size: 0.6rem;
+  }
+
+  .map-info-val {
+    font-size: 0.6875rem;
+  }
+
+  .map-footer-hint {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.2rem;
+    font-size: 0.65rem;
+  }
+
+  /* 5. Why is the air like this? */
+  .why-air-grid {
+    grid-template-columns: 1fr;
+    gap: 0.625rem;
+  }
+
+  .why-card {
+    padding: 0.875rem 0.75rem;
+  }
+
+  .why-card-title {
+    font-size: 0.9rem;
+  }
+
+  .why-card-text {
+    font-size: 0.75rem;
+  }
+
+  /* 6. Weather Conditions */
+  .weather-section-card {
+    padding: 0.875rem 0.75rem;
+    gap: 0.75rem;
+  }
+
+  .weather-metrics-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.45rem;
+  }
+
+  .weather-metric-box {
+    padding: 0.6rem 0.65rem;
+  }
+
+  .weather-box-label {
+    font-size: 0.7rem;
+  }
+
+  .weather-box-val {
+    font-size: 1.15rem;
+  }
+
+  .weather-compass-badge {
+    font-size: 0.6rem;
+    padding: 0.1rem 0.3rem;
+  }
+
+  /* 7. Forecast Chart */
+  .forecast-chart-card {
+    padding: 0.875rem 0.75rem;
+    gap: 0.625rem;
+  }
+
+  .forecast-chart-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .metric-toggle-group {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .metric-toggle-btn {
+    text-align: center;
+    padding: 0.35rem 0.5rem;
+    font-size: 0.7rem;
+  }
+
+  .chart-active-callout {
+    font-size: 0.7rem;
+    padding: 0.35rem 0.5rem;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .chart-canvas-wrapper {
+    height: 220px !important;
+  }
+
+  /* 8. Forecast Summary Cards */
+  .summary-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.45rem;
+  }
+
+  .summary-horizon-card {
+    padding: 0.65rem 0.65rem;
+    gap: 0.4rem;
+  }
+
+  .horizon-tag {
+    font-size: 0.8rem;
+  }
+
+  .horizon-sub {
+    font-size: 0.6rem;
+  }
+
+  .horizon-category-badge {
+    font-size: 0.58rem;
+    padding: 0.15rem 0.35rem;
+  }
+
+  .horizon-aqi-number {
+    font-size: 1.45rem;
+  }
+
+  .horizon-meta-row {
+    font-size: 0.625rem;
+  }
+
+  .horizon-date-row {
+    font-size: 0.6rem;
+    padding-top: 0.25rem;
+  }
+
+  /* 9. Actionable Insight */
+  .actionable-insight-card {
+    padding: 0.875rem 0.75rem;
+    gap: 0.625rem;
+  }
+
+  .insight-header {
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+
+  .insight-tag {
+    font-size: 0.65rem;
+  }
+
+  .insight-hour {
+    font-size: 0.65rem;
+  }
+
+  .insight-body {
+    font-size: 0.78rem;
+  }
+
+  /* 10. Technical Details */
+  .technical-accordion-toggle {
+    padding: 0.75rem 0.75rem;
+    font-size: 0.75rem;
+  }
+
+  .accordion-toggle-left {
+    gap: 0.35rem;
+  }
+
+  .technical-tag {
+    font-size: 0.55rem;
+    padding: 0.1rem 0.3rem;
+  }
+
+  .technical-accordion-content {
+    padding: 0.75rem;
+  }
+
+  .technical-grid {
+    grid-template-columns: 1fr;
+    gap: 0.625rem;
+  }
+
+  .tech-box {
+    padding: 0.65rem 0.75rem;
+  }
+
+  .tech-metric-row {
+    font-size: 0.7rem;
+  }
+}
+
+/* Small Screens (≤ 390px, including iPhone 12/13/14/15/16 and 375px iPhone SE) */
+@media (max-width: 390px) {
+  .breezly-dashboard {
+    padding: 0.5rem 0.375rem 1.75rem 0.375rem;
+    gap: 0.625rem;
+  }
+
+  .brand-title {
+    font-size: 1.1rem;
+  }
+
+  .brand-subtitle {
+    font-size: 0.7rem;
+  }
+
+  .hero-aqi-number {
+    font-size: 2.85rem;
+  }
+
+  .hero-station-title {
+    font-size: 1.1rem;
+  }
+
+  .quick-time-btn {
+    font-size: 0.625rem;
+    padding: 0.3rem 0.1rem;
+  }
+
+  .timeline-ticks {
+    font-size: 0.54rem;
+  }
+
+  .timeline-ticks span:nth-child(2),
+  .timeline-ticks span:nth-child(4),
+  .timeline-ticks span:nth-child(6) {
+    display: none;
+  }
+
+  .technical-tag {
+    display: none;
+  }
+
+  .map-floating-overlay {
+    max-width: 155px;
+  }
+}
+
